@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Return - {{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="subtitle">RETURN &middot; {{ record.record_number }}</div>
+  <h1>Item Return {{ status_badge(record.status) }}</h1>
+</div>
+
+<div class="card">
+  <h2>Return Verification Status: {{ 'VERIFIED' if is_verified else 'INCOMPLETE VERIFICATION' }}</h2>
+  <ul class="checklist">
+    {% for label in satisfied %}<li class="ok">✓ {{ label }}</li>{% endfor %}
+    {% for label in missing %}<li class="missing">✗ {{ label }} (missing)</li>{% endfor %}
+  </ul>
+</div>
+
+{% if record.status == 'READY_FOR_RETURN' and is_provider %}
+<div class="card">
+  <h2>Generate Return Code</h2>
+  <p class="hint">Give this code to the customer to confirm at pickup.</p>
+  <form method="post" action="{{ url_for('records.generate_return_code', record_number=record.record_number) }}">
+    <button class="btn" type="submit">Generate Return Code</button>
+  </form>
+</div>
+{% endif %}
+
+{% if return_row and return_row.return_code %}
+<div class="card">
+  <h2>Return Code</h2>
+  {% if is_provider or is_admin %}<p style="font-size:1.4rem;font-weight:700">{{ return_row.return_code }}</p>{% endif %}
+  {% if record.status == 'RETURN_PENDING' and is_customer and not return_row.returned_at %}
+  <form class="form" method="post" action="{{ url_for('records.confirm_return_code', record_number=record.record_number) }}">
+    <div class="field"><label>Enter the return code given by the provider</label>
+      <input type="text" name="code" required maxlength="6"></div>
+    <button class="btn" type="submit">Confirm Return</button>
+  </form>
+  {% endif %}
+  <dl class="kv" style="margin-top:10px">
+    <dt>Confirmed by customer</dt><dd>{{ return_row.returned_at or 'Pending' }}</dd>
+    <dt>Verified by provider</dt><dd>{{ return_row.verified_at or 'Pending' }}</dd>
+  </dl>
+</div>
+{% endif %}
+
+{% if is_provider and return_row %}
+<div class="card">
+  <h2>Final Condition</h2>
+  <form method="post" action="{{ url_for('records.save_return_condition', record_number=record.record_number) }}">
+    {% for item in condition_items %}
+    {% set key = item.replace(' ', '_') %}
+    <div class="grid grid-2" style="margin-bottom:6px">
+      <div class="field"><label>{{ item }}</label>
+        <select name="severity_{{ key }}">
+          <option value="">Not set</option>
+          {% for s in severity_options %}<option value="{{ s }}">{{ s.replace('_',' ') }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Notes</label><input type="text" name="notes_{{ key }}"></div>
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Save Final Condition</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Accessories Returned</h2>
+  <form method="post" action="{{ url_for('records.save_return_accessories', record_number=record.record_number) }}">
+    {% for a in accessories %}
+    <div class="field">
+      <label>{{ a.name }} (received: {{ 'YES' if a.received else 'NO' }})</label>
+      <select name="ret_{{ a.id }}">
+        <option value="no" {% if a.returned == 0 %}selected{% endif %}>NO</option>
+        <option value="yes" {% if a.returned == 1 %}selected{% endif %}>YES</option>
+      </select>
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Save Returned Accessories</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Return Photos</h2>
+  <form method="post" action="{{ url_for('records.upload_return_evidence', record_number=record.record_number) }}" enctype="multipart/form-data">
+    <div class="grid grid-2">
+      <div class="field"><label>Angle</label>
+        <select name="angle">{% for a in evidence_angles %}<option value="{{ a }}">{{ a }}</option>{% endfor %}</select>
+      </div>
+      <div class="field"><label>Photo</label><input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required></div>
+    </div>
+    <button class="btn" type="submit">Upload Photo</button>
+  </form>
+  {% if evidence %}
+  <div class="photo-grid" style="margin-top:14px">
+    {% for e in evidence %}<figure><img src="{{ url_for('static', filename=e.file_reference) }}" alt="{{ e.angle }}"><figcaption>{{ e.angle }}</figcaption></figure>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% if return_row.returned_at and record.status == 'RETURN_PENDING' %}
+<div class="card">
+  <h2>Verify Return</h2>
+  <form method="post" action="{{ url_for('records.verify_return', record_number=record.record_number) }}">
+    <div class="field"><label>Condition summary notes</label><textarea name="condition_summary"></textarea></div>
+    <button class="btn" type="submit">Confirm Item Returned &amp; Verify</button>
+  </form>
+</div>
+{% endif %}
+{% endif %}
+
+<div style="margin-top:10px">
+  <a href="{{ url_for('records.view_record', record_number=record.record_number) }}">&larr; Back to service record</a>
+</div>
+{% endblock %}

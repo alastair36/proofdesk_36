@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Disputes - ProofDesk Admin{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Disputes</h1></div>
+<div class="card">
+<table>
+  <thead><tr><th>Record #</th><th>Item</th><th>Opened by</th><th>Category</th><th>Status</th><th>Opened</th><th></th></tr></thead>
+  <tbody>
+  {% for d in disputes %}
+    <tr>
+      <td>{{ d.record_number }}</td><td>{{ d.item_name }}</td><td>{{ d.opened_by_name }}</td>
+      <td>{{ d.category.replace('_',' ') }}</td><td>{{ status_badge(d.status) }}</td><td>{{ d.created_at[:10] }}</td>
+      <td><a class="btn btn-sm btn-outline" href="{{ url_for('admin.dispute_detail', dispute_id=d.id) }}">Review</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="empty-state">No disputes.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

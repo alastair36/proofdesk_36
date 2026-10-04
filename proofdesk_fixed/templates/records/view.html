@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}{{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="subtitle">SERVICE RECORD</div>
+  <h1><span class="mono" data-copy="{{ record.record_number }}" title="Click to copy">#{{ record.record_number }}</span> &nbsp; {{ status_badge(record.status) }}</h1>
+  <div class="subtitle">{{ record.item_name }} &middot; {{ record.customer_name }} &middot; {{ record.business_name }}</div>
+</div>
+
+<div class="timeline">
+  {% for label, state in timeline %}
+    <span class="step {{ state }}">{{ '✓' if state=='done' else ('→' if state=='current' else '○') }} {{ label }}</span>
+  {% endfor %}
+</div>
+
+{% if record.status == 'COMPLETED' %}
+<div class="card" style="border-color:#b5e8d3;background:var(--jade-soft);color:var(--jade-ink);">
+  <strong>Record locked.</strong> This service record is complete. Original handover information,
+  condition, accessories, photographs and confirmation timestamps are preserved and cannot be edited.
+</div>
+{% endif %}
+
+{% if record.status in ('HANDOVER_PENDING', 'HANDOVER_VERIFIED') %}
+<div style="margin-bottom:16px">
+  <a class="btn" href="{{ url_for('records.handover_page', record_number=record.record_number) }}">
+    {% if record.status == 'HANDOVER_PENDING' %}Go to Handover &amp; Confirmation{% else %}View Handover / QR Code{% endif %}
+  </a>
+  {% if record.status == 'HANDOVER_VERIFIED' and is_provider %}
+  <form method="post" action="{{ url_for('records.start_service', record_number=record.record_number) }}" style="display:inline">
+    <button class="btn" type="submit">Start Service</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if record.status in ('READY_FOR_RETURN','RETURN_PENDING','RETURN_VERIFIED') %}
+<div style="margin-bottom:16px">
+  <a class="btn" href="{{ url_for('records.return_page', record_number=record.record_number) }}">Go to Return</a>
+</div>
+{% endif %}
+
+{% if record.status in ('RETURN_VERIFIED','COMPLETED','DISPUTED') %}
+<div style="margin-bottom:16px">
+  <a class="btn btn-outline" href="{{ url_for('records.compare_page', record_number=record.record_number) }}">Before &amp; After Comparison</a>
+</div>
+{% endif %}
+
+{% if record.status == 'SERVICE_IN_PROGRESS' and is_provider %}
+<div class="card section">
+  <h2>Add Service Update</h2>
+  <form class="form" method="post" action="{{ url_for('records.add_service_update', record_number=record.record_number) }}">
+    <div class="field">
+      <label>Update type</label>
+      <select name="update_type">
+        <option value="DIAGNOSIS">Diagnosis</option>
+        <option value="SERVICE_PERFORMED">Service Performed</option>
+        <option value="PARTS_USED">Parts Used</option>
+        <option value="TECHNICIAN_NOTE">Technician Note</option>
+        <option value="ADDITIONAL_ISSUE">Additional Issue</option>
+      </select>
+    </div>
+    <div class="field"><label>Description</label><textarea name="description" required></textarea></div>
+    <button class="btn" type="submit">Add Update</button>
+  </form>
+</div>
+
+<div class="card section">
+  <h2>Update Cost</h2>
+  <p class="hint">Original estimate: ₹{{ '%.2f'|format(record.estimated_cost) }}. If the new cost exceeds
+     this, customer approval will be required before service can be marked complete.</p>
+  <form class="form" method="post" action="{{ url_for('records.update_cost', record_number=record.record_number) }}">
+    <div class="field"><label>New cost (₹)</label><input type="number" step="0.01" min="0" name="new_cost" required></div>
+    <button class="btn btn-outline" type="submit">Update Cost</button>
+  </form>
+</div>
+
+<form method="post" action="{{ url_for('records.complete_service', record_number=record.record_number) }}" style="margin-bottom:16px">
+  <button class="btn" type="submit">Mark Service Completed</button>
+</form>
+{% endif %}
+
+{% if cost_approvals %}
+<div class="card section">
+  <h2>Additional Cost Approval</h2>
+  {% for c in cost_approvals %}
+  <div style="padding:10px 0;border-bottom:1px solid var(--line)">
+    <dl class="kv">
+      <dt>Original estimate</dt><dd>₹{{ '%.2f'|format(c.original_cost) }}</dd>
+      <dt>Additional cost</dt><dd>₹{{ '%.2f'|format(c.additional_cost) }}</dd>
+      <dt>New total</dt><dd>₹{{ '%.2f'|format(c.total_cost) }}</dd>
+      <dt>Status</dt><dd>{{ status_badge(c.status) }}</dd>
+    </dl>
+    {% if c.status == 'PENDING' and is_customer %}
+    <form method="post" action="{{ url_for('records.decide_cost_approval', record_number=record.record_number, approval_id=c.id) }}" style="display:inline">
+      <button class="btn btn-sm" type="submit" name="decision" value="APPROVE">Approve</button>
+      <button class="btn btn-sm btn-outline" type="submit" name="decision" value="DECLINE">Decline</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if record.status == 'PAYMENT_PENDING' and is_provider %}
+<div class="card section">
+  <h2>Record Payment</h2>
+  <p class="hint">This creates a payment record for demonstration purposes; ProofDesk does not process real payments.</p>
+  <form class="form" method="post" action="{{ url_for('records.record_payment', record_number=record.record_number) }}">
+    <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" min="0" name="amount" value="{{ record.final_cost }}" required></div>
+    <div class="field"><label>Method</label>
+      <select name="method"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option><option>Other</option></select>
+    </div>
+    <div class="field"><label>Reference / transaction number</label><input type="text" name="reference"></div>
+    <button class="btn" type="submit">Record Payment</button>
+  </form>
+  <form method="post" action="{{ url_for('records.ready_for_return', record_number=record.record_number) }}" style="margin-top:10px">
+    <button class="btn btn-outline" type="submit">Mark Ready for Return</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="grid grid-2">
+  <div class="card section">
+    <h2>Item</h2>
+    <dl class="kv">
+      <dt>Item</dt><dd>{{ record.item_name }}</dd>
+      <dt>Brand</dt><dd>{{ record.brand or '—' }}</dd>
+      <dt>Model</dt><dd>{{ record.model or '—' }}</dd>
+      <dt>Serial number</dt><dd>{{ record.serial_number or '—' }}</dd>
+      <dt>Reported problem</dt><dd>{{ record.problem_description }}</dd>
+      <dt>Estimated cost</dt><dd>₹{{ '%.2f'|format(record.estimated_cost) }}</dd>
+      <dt>Final cost</dt><dd>{{ '₹%.2f'|format(record.final_cost) if record.final_cost is not none else '—' }}</dd>
+      <dt>Expected completion</dt><dd>{{ record.expected_completion_date or '—' }}</dd>
+      <dt>Created</dt><dd>{{ record.created_at }}</dd>
+    </dl>
+  </div>
+
+  <div class="card section">
+    <h2>Handover Verification</h2>
+    <ul class="checklist">
+      <li class="{{ 'ok' if accessories else 'missing' }}">{{ '✓' if accessories else '✗' }} Accessories checklist completed</li>
+      <li class="{{ 'ok' if conditions_handover else 'missing' }}">{{ '✓' if conditions_handover else '✗' }} Condition checklist completed</li>
+      <li class="{{ 'ok' if evidence_handover else 'missing' }}">{{ '✓' if evidence_handover else '✗' }} Condition photograph(s) uploaded</li>
+      <li class="{{ 'ok' if cust_confirmed else 'missing' }}">{{ '✓' if cust_confirmed else '✗' }} Customer confirmed</li>
+      <li class="{{ 'ok' if prov_confirmed else 'missing' }}">{{ '✓' if prov_confirmed else '✗' }} Service provider confirmed</li>
+    </ul>
+    <p class="hint">Full handover documentation tools are added in the next build phase.</p>
+  </div>
+</div>
+
+<div class="card section">
+  <h2>Accessories</h2>
+  {% if accessories %}
+  <table>
+    <thead><tr><th>Accessory</th><th>Received</th><th>Returned</th></tr></thead>
+    <tbody>
+    {% for a in accessories %}
+      <tr>
+        <td>{{ a.name }}</td>
+        <td>{{ 'YES' if a.received else 'NO' }}</td>
+        <td>{{ 'YES' if a.returned == 1 else ('NO' if a.returned == 0 else '—') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty-state">No accessories recorded yet.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Condition</h2>
+  <h3>At handover</h3>
+  {% if conditions_handover %}
+  <table>
+    <thead><tr><th>Item</th><th>Severity</th><th>Notes</th></tr></thead>
+    <tbody>
+    {% for c in conditions_handover %}
+      <tr><td>{{ c.condition_type }}</td><td>{{ status_badge(c.severity) }}</td><td>{{ c.description or '—' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty-state">No condition report recorded yet.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Evidence</h2>
+  {% if evidence_handover %}
+  <div class="photo-grid">
+    {% for e in evidence_handover %}
+      <figure>
+        <img src="{{ url_for('static', filename=e.file_reference) }}" alt="{{ e.angle or 'photo' }}">
+        <figcaption>{{ e.angle or 'photo' }} &middot; {{ e.created_at[:10] }}</figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty-state">No photographs uploaded yet.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Service Updates</h2>
+  {% if service_updates %}
+    {% for u in service_updates %}
+      <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+        <strong>{{ u.update_type.replace('_',' ')|title }}</strong> — {{ u.description }}
+        <div class="hint">{{ u.created_by_name }} &middot; {{ u.created_at }}</div>
+      </div>
+    {% endfor %}
+  {% else %}<p class="empty-state">No service updates yet.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Payment</h2>
+  {% if payments %}
+  <table>
+    <thead><tr><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+      <tr><td>₹{{ '%.2f'|format(p.amount) }}</td><td>{{ p.method }}</td><td>{{ p.reference or '—' }}</td>
+          <td>{{ status_badge(p.status) }}</td><td>{{ p.created_at[:10] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty-state">No payment recorded yet.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Return</h2>
+  {% if return_row %}
+  <dl class="kv">
+    <dt>Return code</dt><dd>{{ return_row.return_code or '—' }}</dd>
+    <dt>Returned at</dt><dd>{{ return_row.returned_at or 'Pending customer confirmation' }}</dd>
+    <dt>Verified at</dt><dd>{{ return_row.verified_at or 'Pending provider verification' }}</dd>
+    <dt>Condition summary</dt><dd>{{ return_row.condition_summary or '—' }}</dd>
+  </dl>
+  {% else %}<p class="empty-state">Return process has not started.</p>{% endif %}
+</div>
+
+<div class="card section">
+  <h2>Dispute</h2>
+  {% if disputes %}
+    {% for d in disputes %}
+      <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+        {{ status_badge(d.status) }} <strong>{{ d.category.replace('_',' ') }}</strong>
+        <div>{{ d.description }}</div>
+        <div class="hint">Opened {{ d.created_at }}</div>
+        {% if d.status == 'CLOSED' %}<div class="hint"><strong>Resolution:</strong> {{ d.resolution }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  {% else %}<p class="empty-state">No disputes on this record.</p>{% endif %}
+  {% if is_customer and not disputes %}
+  <a class="btn btn-outline btn-sm" href="{{ url_for('records.open_dispute', record_number=record.record_number) }}">Open Dispute</a>
+  {% elif is_customer and disputes and disputes[0].status == 'CLOSED' %}
+  <a class="btn btn-outline btn-sm" href="{{ url_for('records.open_dispute', record_number=record.record_number) }}">Open New Dispute</a>
+  {% endif %}
+</div>
+
+<div class="card section">
+  <h2>Audit History</h2>
+  {% if audit_logs %}
+  <table>
+    <thead><tr><th>Action</th><th>User</th><th>From</th><th>To</th><th>Timestamp</th></tr></thead>
+    <tbody>
+    {% for a in audit_logs %}
+      <tr><td>{{ a.action.replace('_',' ') }}</td><td>{{ a.user_name or 'System' }}</td>
+          <td>{{ a.old_value or '—' }}</td><td>{{ a.new_value or '—' }}</td><td>{{ a.created_at }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty-state">No audit events yet.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#15132b">
+<title>{% block title %}ProofDesk{% endblock %}</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2226%22 fill=%22%234b3fe4%22/><path d=%22M50 18 78 30v20c0 18-12 28-28 33C34 78 22 68 22 50V30z%22 fill=%22none%22 stroke=%22white%22 stroke-width=%228%22 stroke-linejoin=%22round%22/><path d=%22m38 50 9 9 17-18%22 fill=%22none%22 stroke=%22white%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("pd-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% macro icon(name) -%}
+{%- set paths = {
+ 'home': '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+ 'list': '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>',
+ 'box': '<path d="m21 8-9-5-9 5v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+ 'bell': '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+ 'user': '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+ 'wrench': '<path d="M14.5 6.5a4 4 0 0 0 5 5L10 21a2.5 2.5 0 0 1-4-4z"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/>',
+ 'undo': '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+ 'flag': '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+ 'users': '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M19 15c2 .7 3 2.3 3 5"/>',
+ 'shop': '<path d="M4 9 5.5 4h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 4 0"/>',
+ 'scroll': '<path d="M8 4h11v13a3 3 0 0 1-3 3H6"/><path d="M8 4v13a3 3 0 0 1-3 3 2 2 0 0 1-2-2v-1h5"/><path d="M12 9h4M12 13h4"/>',
+ 'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ 'moon': '<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>',
+ 'logout': '<path d="M9 4H5v16h4"/><path d="m16 8 4 4-4 4M20 12H9"/>'
+} -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ paths[name]|safe }}</svg>
+{%- endmacro %}
+{% macro navlink(endpoint, label, ico) -%}
+<a href="{{ url_for(endpoint) }}" class="{{ 'active' if request.endpoint == endpoint else '' }}">{{ icon(ico) }}<span>{{ label }}</span>{{ caller() if caller else '' }}</a>
+{%- endmacro %}
+{% set mark %}<span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6.5v5.5c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6.5z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>{% endset %}
+
+{% if g.user %}
+<div class="mobilebar">
+  <a class="brand" href="{{ url_for('index') }}">{{ mark }}Proof<span>Desk</span></a>
+  <button class="menu-btn" type="button" aria-label="Toggle menu" onclick="document.body.classList.toggle('menu-open')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+</div>
+{% endif %}
+<div class="app{{ '' if g.user else ' noauth' }}">
+  {% if g.user %}
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('index') }}">{{ mark }}<div>Proof<span>Desk</span></div></a>
+    <nav class="nav">
+      {% if g.user.role == 'customer' %}
+        {{ navlink('customer.dashboard', 'Dashboard', 'home') }}
+        {{ navlink('customer.requests_list', 'Requests', 'list') }}
+        {{ navlink('customer.services_list', 'Services', 'box') }}
+        {% call navlink('customer.notifications', 'Notifications', 'bell') %}{% if unread_notifications %}<span class="badge badge-red">{{ unread_notifications }}</span>{% endif %}{% endcall %}
+        {{ navlink('customer.profile', 'Profile', 'user') }}
+      {% elif g.user.role == 'provider' %}
+        {{ navlink('provider.dashboard', 'Dashboard', 'home') }}
+        {{ navlink('provider.requests_list', 'Requests', 'list') }}
+        {{ navlink('provider.active_services', 'Active Services', 'wrench') }}
+        {{ navlink('provider.returns_list', 'Returns', 'undo') }}
+        {{ navlink('provider.disputes_list', 'Disputes', 'flag') }}
+        {% call navlink('provider.notifications', 'Notifications', 'bell') %}{% if unread_notifications %}<span class="badge badge-red">{{ unread_notifications }}</span>{% endif %}{% endcall %}
+        {{ navlink('provider.profile', 'Profile', 'user') }}
+      {% elif g.user.role == 'admin' %}
+        {{ navlink('admin.dashboard', 'Dashboard', 'home') }}
+        {{ navlink('admin.users_list', 'Users', 'users') }}
+        {{ navlink('admin.providers_list', 'Providers', 'shop') }}
+        {{ navlink('admin.services_list', 'Services', 'box') }}
+        {{ navlink('admin.disputes_list', 'Disputes', 'flag') }}
+        {{ navlink('admin.audit_logs', 'Audit Logs', 'scroll') }}
+      {% endif %}
+    </nav>
+    <div class="side-foot">
+      <div class="avatar">{{ g.user.name[:1]|upper }}</div>
+      <div class="who"><b>{{ g.user.name }}</b><small>{{ g.user.role }}</small></div>
+      <button type="button" class="logout theme-btn" data-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode"><span class="i-sun">{{ icon('sun') }}</span><span class="i-moon">{{ icon('moon') }}</span></button>
+      <a href="{{ url_for('auth.logout') }}" class="logout" title="Logout" aria-label="Logout ({{ g.user.name }})">{{ icon('logout') }}</a>
+    </div>
+  </aside>
+  {% endif %}
+  <div class="main">
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% if not g.user %}<button type="button" class="theme-fab" data-theme-toggle aria-label="Toggle dark mode"><span class="i-sun">{{ icon('sun') }}</span><span class="i-moon">{{ icon('moon') }}</span></button>{% endif %}
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

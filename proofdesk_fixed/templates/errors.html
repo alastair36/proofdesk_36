@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-wrap">
+<div class="err-page">
+  <div class="code">{{ code }}</div>
+  <p>{{ message }}</p>
+  <a class="btn" href="{{ url_for('index') }}">Go home</a>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Log in - ProofDesk{% endblock %}
+{% block content %}
+<div class="auth">
+  <section class="auth-hero">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6.5v5.5c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6.5z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><div>Proof<span>Desk</span></div></a>
+    <div>
+      <h2>Every handover, on the record.</h2>
+      <p>Photos, conditions and confirmations from both sides, timestamped from drop-off to verified return.</p>
+    </div>
+    <div class="receipt" aria-hidden="true">
+      <div class="rh"><span>Service record</span><small>Verified</small></div>
+      <div class="step"><i>✓</i><div><b>Item dropped off</b><span>Photos and condition logged</span></div></div>
+      <div class="step"><i>✓</i><div><b>Both sides confirmed</b><span>Customer and provider</span></div></div>
+      <div class="step"><i>✓</i><div><b>Service completed</b><span>Updates and costs recorded</span></div></div>
+      <div class="step now"><i>●</i><div><b>Return pending</b><span>Waiting for return code</span></div></div>
+    </div>
+  </section>
+  <section class="auth-form">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <div class="tagline">Log in to your ProofDesk account.</div>
+      <form class="form" method="post" action="{{ url_for('auth.login') }}">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="{{ email }}" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button class="btn" type="submit">Log in</button>
+      </form>
+      <div class="demo-hint">
+        <b>Try the demo</b> — tap a role to fill the form
+        <div class="demo-chips">
+          <button type="button" class="chip" data-demo="customer@proofdesk.demo">Customer</button>
+          <button type="button" class="chip" data-demo="provider@proofdesk.demo">Provider</button>
+          <button type="button" class="chip" data-demo="admin@proofdesk.demo">Admin</button>
+        </div>
+      </div>
+      <div class="auth-switch">No account? <a href="{{ url_for('auth.register') }}">Create one</a></div>
+    </div>
+  </section>
+</div>
+{% endblock %}

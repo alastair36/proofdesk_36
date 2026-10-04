@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Incoming Requests - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Incoming Requests</h1></div>
+
+<div class="card section">
+  <h2>New requests</h2>
+  {% if pending %}
+  <table>
+    <thead><tr><th>Customer</th><th>Item</th><th>Category</th><th>Problem</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>
+    {% for r in pending %}
+      <tr>
+        <td>{{ r.customer_name }}</td>
+        <td>{{ r.item_name }}{% if r.brand %} ({{ r.brand }}{% if r.model %} {{ r.model }}{% endif %}){% endif %}</td>
+        <td>{{ r.category }}</td>
+        <td>{{ r.problem_description[:60] }}{% if r.problem_description|length > 60 %}&hellip;{% endif %}</td>
+        <td>{{ r.created_at[:10] }}</td>
+        <td style="white-space:nowrap">
+          <form method="post" action="{{ url_for('provider.accept_request', request_id=r.id) }}" style="display:inline">
+            <button class="btn btn-sm" type="submit">Accept</button>
+          </form>
+          <form method="post" action="{{ url_for('provider.reject_request', request_id=r.id) }}" style="display:inline">
+            <button class="btn btn-sm btn-outline" type="submit">Reject</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">No new requests.</p>
+  {% endif %}
+</div>
+
+<div class="card section">
+  <h2>Recently handled</h2>
+  {% if handled %}
+  <table>
+    <thead><tr><th>Customer</th><th>Item</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>
+    {% for r in handled %}
+      <tr><td>{{ r.customer_name }}</td><td>{{ r.item_name }}</td><td>{{ status_badge(r.status) }}</td><td>{{ r.created_at[:10] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">Nothing handled yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

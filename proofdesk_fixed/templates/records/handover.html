@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Handover - {{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="subtitle">HANDOVER &middot; {{ record.record_number }}</div>
+  <h1>Item Handover {{ status_badge(record.status) }}</h1>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Customer</h3>
+    <dl class="kv"><dt>Name</dt><dd>{{ record.customer_name }}</dd></dl>
+  </div>
+  <div class="card">
+    <h3>Service Provider</h3>
+    <dl class="kv"><dt>Business</dt><dd>{{ record.business_name }}</dd></dl>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Item &amp; Cost</h3>
+  <dl class="kv">
+    <dt>Item</dt><dd>{{ record.item_name }}{% if record.brand %} &middot; {{ record.brand }}{% endif %}{% if record.model %} {{ record.model }}{% endif %}</dd>
+    <dt>Serial number</dt><dd>{{ record.serial_number or '—' }}</dd>
+    <dt>Reported problem</dt><dd>{{ record.problem_description }}</dd>
+    <dt>Estimated cost</dt><dd>₹{{ '%.2f'|format(record.estimated_cost) }}</dd>
+    <dt>Expected completion</dt><dd>{{ record.expected_completion_date or '—' }}</dd>
+  </dl>
+</div>
+
+{% if record.status == 'HANDOVER_VERIFIED' %}
+<div class="card" style="border-color:#b5e8d3;background:var(--jade-soft)">
+  <h2 style="color:var(--jade-ink)">✓ VERIFIED HANDOVER</h2>
+  <ul class="checklist">
+    {% for label in satisfied %}<li class="ok">✓ {{ label }}</li>{% endfor %}
+  </ul>
+  <p><strong>Verification code:</strong> {{ record.verification_code }}</p>
+  <img src="{{ url_for('static', filename='qr/' + record.verification_code + '.png') }}"
+       alt="QR verification code" style="width:180px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff">
+  <p class="hint">Scanning this code opens a public page showing only the record number, status and
+     verification timestamp — no personal customer data.</p>
+</div>
+{% else %}
+<div class="card">
+  <h2>Verification Status: {{ 'VERIFIED' if is_verified else 'INCOMPLETE VERIFICATION' }}</h2>
+  <ul class="checklist">
+    {% for label in satisfied %}<li class="ok">✓ {{ label }}</li>{% endfor %}
+    {% for label in missing %}<li class="missing">✗ {{ label }} (missing)</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Accessories</h2>
+  {% if editable and is_provider %}
+  <form method="post" action="{{ url_for('records.save_accessories', record_number=record.record_number) }}">
+    <div class="grid grid-3">
+      {% for opt in accessory_options %}
+      <div class="field">
+        <label>{{ opt }}</label>
+        <select name="acc_{{ opt }}">
+          <option value="no" {% if opt not in existing_accessory_names %}selected{% endif %}>NO</option>
+          <option value="yes" {% if opt in existing_accessory_names %}selected{% endif %}>YES</option>
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="field">
+      <label>Custom accessories (comma separated)</label>
+      <input type="text" name="custom_accessories" placeholder="e.g. Stylus, Screen protector">
+    </div>
+    <button class="btn" type="submit">Save Accessory Checklist</button>
+  </form>
+  {% else %}
+    {% if accessories %}
+    <table><thead><tr><th>Accessory</th><th>Received</th></tr></thead><tbody>
+      {% for a in accessories %}<tr><td>{{ a.name }}</td><td>{{ 'YES' if a.received else 'NO' }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<p class="empty-state">Not recorded yet.</p>{% endif %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Condition Checklist</h2>
+  {% if editable and is_provider %}
+  <form method="post" action="{{ url_for('records.save_condition', record_number=record.record_number) }}">
+    {% for item in condition_items %}
+    {% set key = item.replace(' ', '_') %}
+    <div class="grid grid-2" style="margin-bottom:6px">
+      <div class="field">
+        <label>{{ item }}</label>
+        <select name="severity_{{ key }}">
+          <option value="">Not set</option>
+          {% for s in severity_options %}<option value="{{ s }}">{{ s.replace('_',' ') }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <input type="text" name="notes_{{ key }}" placeholder="Optional notes">
+      </div>
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Save Condition Report</button>
+  </form>
+  {% else %}
+    {% if conditions %}
+    <table><thead><tr><th>Item</th><th>Severity</th><th>Notes</th></tr></thead><tbody>
+      {% for c in conditions %}<tr><td>{{ c.condition_type }}</td><td>{{ status_badge(c.severity) }}</td><td>{{ c.description or '—' }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<p class="empty-state">Not recorded yet.</p>{% endif %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Evidence Photos</h2>
+  {% if editable and is_provider %}
+  <form method="post" action="{{ url_for('records.upload_evidence', record_number=record.record_number) }}"
+        enctype="multipart/form-data">
+    <div class="grid grid-2">
+      <div class="field">
+        <label>Angle</label>
+        <select name="angle">
+          {% for a in evidence_angles %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Photo (JPG, JPEG, PNG or WEBP, max {{ max_mb }}MB)</label>
+        <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required>
+      </div>
+    </div>
+    <button class="btn" type="submit">Upload Photo</button>
+  </form>
+  {% endif %}
+  {% if evidence %}
+  <div class="photo-grid" style="margin-top:14px">
+    {% for e in evidence %}
+      <figure>
+        <img src="{{ url_for('static', filename=e.file_reference) }}" alt="{{ e.angle }}">
+        <figcaption>{{ e.angle }}</figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty-state">No photos uploaded yet.</p>{% endif %}
+</div>
+
+{% if editable %}
+<div class="card">
+  <h2>Dual Confirmation</h2>
+  <p>Both the customer and the service provider must independently confirm that the item,
+     accessories and recorded condition are correct.</p>
+  <div class="grid grid-2">
+    <div>
+      <strong>Customer:</strong>
+      {% if cust_confirmed %}<span class="badge badge-green">Confirmed</span>
+      {% elif is_customer %}
+        <form method="post" action="{{ url_for('records.confirm_handover', record_number=record.record_number) }}">
+          <p class="hint">"I confirm that the item, accessories and recorded condition are correct."</p>
+          <button class="btn" type="submit">Confirm Handover</button>
+        </form>
+      {% else %}<span class="badge badge-gray">Not yet confirmed</span>{% endif %}
+    </div>
+    <div>
+      <strong>Service Provider:</strong>
+      {% if prov_confirmed %}<span class="badge badge-green">Confirmed</span>
+      {% elif is_provider %}
+        <form method="post" action="{{ url_for('records.confirm_handover', record_number=record.record_number) }}">
+          <p class="hint">"I confirm that the item, accessories and recorded condition are correct."</p>
+          <button class="btn" type="submit">Confirm Handover</button>
+        </form>
+      {% else %}<span class="badge badge-gray">Not yet confirmed</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div style="margin-top:10px">
+  <a href="{{ url_for('records.view_record', record_number=record.record_number) }}">&larr; Back to service record</a>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Audit Logs - ProofDesk Admin{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Audit Logs</h1><div class="subtitle">Most recent 300 platform events</div></div>
+<div class="card">
+<table>
+  <thead><tr><th>Action</th><th>Record</th><th>User</th><th>From</th><th>To</th><th>Timestamp</th></tr></thead>
+  <tbody>
+  {% for a in logs %}
+    <tr>
+      <td>{{ a.action.replace('_',' ') }}</td>
+      <td>{{ a.record_number or '—' }}</td>
+      <td>{{ a.user_name or 'System' }}</td>
+      <td>{{ a.old_value or '—' }}</td>
+      <td>{{ a.new_value or '—' }}</td>
+      <td>{{ a.created_at }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="empty-state">No audit events yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% macro status_badge(status) %}
+{% set cls = {
+  'DRAFT': 'badge-gray', 'HANDOVER_PENDING': 'badge-amber', 'HANDOVER_VERIFIED': 'badge-green',
+  'SERVICE_IN_PROGRESS': 'badge-blue', 'SERVICE_COMPLETED': 'badge-blue', 'PAYMENT_PENDING': 'badge-amber',
+  'READY_FOR_RETURN': 'badge-blue', 'RETURN_PENDING': 'badge-amber', 'RETURN_VERIFIED': 'badge-green',
+  'COMPLETED': 'badge-green', 'DISPUTED': 'badge-red', 'CANCELLED': 'badge-gray',
+  'PENDING': 'badge-amber', 'ACCEPTED': 'badge-green', 'REJECTED': 'badge-red',
+  'OPEN': 'badge-red', 'UNDER_REVIEW': 'badge-amber', 'CLOSED': 'badge-gray',
+  'UNPAID': 'badge-red', 'PAID': 'badge-green', 'REFUNDED': 'badge-gray',
+  'APPROVED': 'badge-green', 'DECLINED': 'badge-red',
+} %}
+<span class="badge {{ cls.get(status, 'badge-gray') }}">{{ status.replace('_',' ') }}</span>
+{% endmacro %}
+
+{% macro record_row(r) %}
+<tr>
+  <td><a href="{{ url_for('records.view_record', record_number=r['record_number']) }}">{{ r['record_number'] }}</a></td>
+  <td>{{ r['item_name'] }}</td>
+  <td>{{ r['business_name'] if 'business_name' in r.keys() else '' }}</td>
+  <td>{{ status_badge(r['status']) }}</td>
+  <td>{{ r['created_at'][:10] }}</td>
+</tr>
+{% endmacro %}
+
+{% macro bar_row(label, value, maximum, from_c, to_c) %}
+<div class="bar-row">
+  <div class="bl"><span>{{ label }}</span><b>{{ value }}</b></div>
+  <div class="bar"><div style="width:{{ (value / maximum * 100)|round if maximum else 0 }}%;background:linear-gradient(90deg,{{ from_c }},{{ to_c }})"></div></div>
+</div>
+{% endmacro %}

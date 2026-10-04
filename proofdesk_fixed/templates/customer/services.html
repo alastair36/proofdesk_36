@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}My Services - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>My Items &amp; Services</h1></div>
+<div class="card">
+{% if records %}
+<table>
+  <thead><tr><th>Record #</th><th>Item</th><th>Provider</th><th>Status</th><th>Created</th></tr></thead>
+  <tbody>
+  {% for r in records %}
+    <tr>
+      <td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td>
+      <td>{{ r.item_name }}</td><td>{{ r.business_name }}</td><td>{{ status_badge(r.status) }}</td>
+      <td>{{ r.created_at[:10] }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No service records yet. Create a service request to get started.</p>
+{% endif %}
+</div>
+{% endblock %}

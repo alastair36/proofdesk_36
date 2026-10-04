@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Open Dispute - {{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Open Dispute</h1>
+  <div class="subtitle">{{ record.record_number }} &middot; {{ record.item_name }}</div>
+</div>
+<div class="card">
+<form class="form form-wide" method="post" enctype="multipart/form-data">
+  <div class="field">
+    <label>Dispute category</label>
+    <select name="category" required>
+      {% for c in categories %}<option value="{{ c }}">{{ c.replace('_',' ')|title }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Description</label>
+    <textarea name="description" required placeholder="Describe the issue in detail"></textarea>
+  </div>
+  <div class="field">
+    <label>Evidence (optional)</label>
+    <input type="file" name="evidence" accept=".jpg,.jpeg,.png,.webp">
+  </div>
+  <button class="btn btn-danger" type="submit">Submit Dispute</button>
+</form>
+</div>
+{% endblock %}

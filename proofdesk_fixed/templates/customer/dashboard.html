@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Dashboard - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header hero-greet">
+  <div>
+    <div class="subtitle">Your service record dashboard</div>
+    <h1>Welcome, {{ g.user.name }}</h1>
+  </div>
+  <div class="today" id="today"></div>
+</div>
+<script>document.getElementById('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});</script>
+
+<div class="quick">
+  <a class="primary" href="{{ url_for('customer.new_request') }}"><span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><div>Create Service Request<small>Hand an item to a provider</small></div></a>
+  <a href="{{ url_for('customer.services_list') }}"><span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-9-5-9 5v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></span><div>View My Items<small>Every record, one place</small></div></a>
+  <a href="{{ url_for('customer.services_list') }}"><span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></svg></span><div>Open Dispute<small>Something not right?</small></div></a>
+</div>
+
+<div class="grid grid-4">
+  <div class="card stat"><div class="num">{{ active|length }}</div><div class="label">Active service records</div></div>
+  <div class="card stat"><div class="num">{{ awaiting_confirmation|length }}</div><div class="label">Awaiting your confirmation</div></div>
+  <div class="card stat"><div class="num">{{ under_service|length }}</div><div class="label">Under service</div></div>
+  <div class="card stat"><div class="num">{{ ready_pickup|length }}</div><div class="label">Ready for pickup</div></div>
+</div>
+
+{% if pending_requests %}
+<div class="card section">
+  <h2>Requests awaiting provider response</h2>
+  <table>
+    <thead><tr><th>Item</th><th>Provider</th><th>Category</th><th>Status</th><th>Submitted</th></tr></thead>
+    <tbody>
+    {% for r in pending_requests %}
+      <tr><td>{{ r.item_name }}</td><td>{{ r.business_name }}</td><td>{{ r.category }}</td>
+          <td>{{ status_badge(r.status) }}</td><td>{{ r.created_at[:10] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if awaiting_confirmation %}
+<div class="card section">
+  <h2>Awaiting your handover confirmation</h2>
+  <table>
+    <thead><tr><th>Record #</th><th>Item</th><th>Provider</th><th></th></tr></thead>
+    <tbody>
+    {% for r in awaiting_confirmation %}
+      <tr><td>{{ r.record_number }}</td><td>{{ r.item_name }}</td><td>{{ r.business_name }}</td>
+          <td><a class="btn btn-sm" href="{{ url_for('records.view_record', record_number=r.record_number) }}">Review &amp; Confirm</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card section">
+  <h2>Active service records</h2>
+  {% if active %}
+  <table>
+    <thead><tr><th>Record #</th><th>Item</th><th>Provider</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for r in active %}
+      <tr>
+        <td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td>
+        <td>{{ r.item_name }}</td><td>{{ r.business_name }}</td><td>{{ status_badge(r.status) }}</td>
+        <td>{{ r.created_at[:10] }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">No active service records.</p>
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Completed services</h2>
+    {% if completed %}
+      <table><tbody>
+      {% for r in completed %}
+        <tr><td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td><td>{{ r.item_name }}</td></tr>
+      {% endfor %}
+      </tbody></table>
+    {% else %}<p class="empty-state">No completed services yet.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Open disputes</h2>
+    {% if disputes %}
+      <table><tbody>
+      {% for d in disputes %}
+        <tr><td>{{ d.record_number }}</td><td>{{ status_badge(d.status) }}</td></tr>
+      {% endfor %}
+      </tbody></table>
+    {% else %}<p class="empty-state">No open disputes.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

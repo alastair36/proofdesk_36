@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}My Profile - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>My Profile</h1></div>
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Account details</h2>
+    <dl class="kv">
+      <dt>Name</dt><dd>{{ g.user.name }}</dd>
+      <dt>Email</dt><dd>{{ g.user.email }}</dd>
+      <dt>Phone</dt><dd>{{ g.user.phone or '—' }}</dd>
+      <dt>Member since</dt><dd>{{ g.user.created_at[:10] }}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h2>Service history</h2>
+    <div class="grid grid-3">
+      <div class="stat"><div class="num">{{ total }}</div><div class="label">Total records</div></div>
+      <div class="stat"><div class="num">{{ active }}</div><div class="label">Active</div></div>
+      <div class="stat"><div class="num">{{ completed }}</div><div class="label">Completed</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Returns - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Returns</h1></div>
+<div class="card">
+{% if records %}
+<table>
+  <thead><tr><th>Record #</th><th>Item</th><th>Customer</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for r in records %}
+    <tr>
+      <td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td>
+      <td>{{ r.item_name }}</td><td>{{ r.customer_name }}</td><td>{{ status_badge(r.status) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No items pending return.</p>
+{% endif %}
+</div>
+{% endblock %}

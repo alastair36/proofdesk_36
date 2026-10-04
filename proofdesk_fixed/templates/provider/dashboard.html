@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Dashboard - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ provider.business_name }}</h1>
+  <div class="subtitle">
+    {{ provider.category }} &middot;
+    {% if provider.verification_status == 'VERIFIED' %}
+      <span class="badge badge-green">Verified Business</span>
+    {% else %}
+      <span class="badge badge-gray">{{ provider.verification_status }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-4">
+  <a class="card stat" href="{{ url_for('provider.requests_list') }}"><div class="num">{{ stats.new_requests }}</div><div class="label">New requests</div></a>
+  <a class="card stat" href="{{ url_for('provider.active_services') }}"><div class="num">{{ stats.received }}</div><div class="label">Items currently received</div></a>
+  <a class="card stat" href="{{ url_for('provider.active_services') }}"><div class="num">{{ stats.in_progress }}</div><div class="label">Services in progress</div></a>
+  <a class="card stat" href="{{ url_for('provider.returns_list') }}"><div class="num">{{ stats.ready_for_return }}</div><div class="label">Ready for return</div></a>
+</div>
+<div class="grid grid-4">
+  <div class="card stat"><div class="num">{{ stats.pending_payments }}</div><div class="label">Pending payments</div></div>
+  <a class="card stat" href="{{ url_for('provider.disputes_list') }}"><div class="num">{{ stats.open_disputes }}</div><div class="label">Open disputes</div></a>
+  <div class="card stat"><div class="num">{{ stats.completed }}</div><div class="label">Completed services</div></div>
+  <div class="card stat"><div class="num">{{ stats.pending_returns }}</div><div class="label">Pending returns</div></div>
+</div>
+
+<div class="card section">
+  <h2>Recent service records</h2>
+  {% if recent %}
+  <table>
+    <thead><tr><th>Record #</th><th>Item</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for r in recent %}
+      <tr>
+        <td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td>
+        <td>{{ r.item_name }}</td><td>{{ r.customer_name }}</td><td>{{ status_badge(r.status) }}</td>
+        <td>{{ r.created_at[:10] }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">No service records yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

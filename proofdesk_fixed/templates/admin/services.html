@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Service Records - ProofDesk Admin{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Service Records</h1></div>
+<form class="grid grid-2" method="get" style="max-width:600px;margin-bottom:16px">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search record #, item, brand, customer, provider">
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for s in ['DRAFT','HANDOVER_PENDING','HANDOVER_VERIFIED','SERVICE_IN_PROGRESS','SERVICE_COMPLETED','PAYMENT_PENDING','READY_FOR_RETURN','RETURN_PENDING','RETURN_VERIFIED','COMPLETED','DISPUTED','CANCELLED'] %}
+      <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+    {% endfor %}
+  </select>
+</form>
+<div class="card">
+<table>
+  <thead><tr><th>Record #</th><th>Item</th><th>Customer</th><th>Provider</th><th>Status</th><th>Created</th></tr></thead>
+  <tbody>
+  {% for r in records %}
+    <tr>
+      <td><a href="{{ url_for('records.view_record', record_number=r.record_number) }}">{{ r.record_number }}</a></td>
+      <td>{{ r.item_name }}</td><td>{{ r.customer_name }}</td><td>{{ r.business_name }}</td>
+      <td>{{ status_badge(r.status) }}</td><td>{{ r.created_at[:10] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="empty-state">No records found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

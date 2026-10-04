@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Business Profile - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Business Profile</h1></div>
+<div class="card">
+  <dl class="kv">
+    <dt>Business name</dt><dd>{{ provider.business_name }}</dd>
+    <dt>Category</dt><dd>{{ provider.category }}</dd>
+    <dt>Description</dt><dd>{{ provider.description or '—' }}</dd>
+    <dt>Contact</dt><dd>{{ provider.contact_phone or '—' }}</dd>
+    <dt>Address</dt><dd>{{ provider.address or '—' }}</dd>
+    <dt>Operating hours</dt><dd>{{ provider.operating_hours or '—' }}</dd>
+    <dt>Verification</dt>
+    <dd>
+      {% if provider.verification_status == 'VERIFIED' %}
+        <span class="badge badge-green">Verified Business</span>
+      {% else %}
+        <span class="badge badge-gray">{{ provider.verification_status }}</span>
+      {% endif %}
+    </dd>
+  </dl>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Notifications - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Notifications</h1></div>
+<div class="card">
+{% if items %}
+  {% for n in items %}
+  <div class="note">
+    <strong>{{ n.title }}</strong>
+    <div style="color:var(--ink-soft); font-size:0.88rem">{{ n.message }}</div>
+    <div style="color:var(--ink-soft); font-size:0.76rem; margin-top:4px">{{ n.created_at }}</div>
+  </div>
+  {% endfor %}
+{% else %}
+  <p class="empty-state">No notifications yet.</p>
+{% endif %}
+</div>
+{% endblock %}

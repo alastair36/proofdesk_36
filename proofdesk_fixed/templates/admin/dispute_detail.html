@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Dispute - {{ record.record_number }} - ProofDesk Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Dispute Review &mdash; {{ record.record_number }}</h1>
+  <div class="subtitle">Opened by {{ dispute.opened_by_name }} &middot; {{ status_badge(dispute.status) }}</div>
+</div>
+
+<div class="card">
+  <h2>Dispute</h2>
+  <dl class="kv">
+    <dt>Category</dt><dd>{{ dispute.category.replace('_',' ') }}</dd>
+    <dt>Description</dt><dd>{{ dispute.description }}</dd>
+    <dt>Opened</dt><dd>{{ dispute.created_at }}</dd>
+    {% if dispute.status == 'CLOSED' %}<dt>Resolution</dt><dd>{{ dispute.resolution }}</dd>{% endif %}
+  </dl>
+</div>
+
+<p class="hint">The system presents the full evidence trail below. It does not automatically decide
+   who is correct &mdash; that judgment belongs to you.</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Original Handover Record</h3>
+    <dl class="kv">
+      <dt>Item</dt><dd>{{ record.item_name }} {{ record.brand }} {{ record.model }}</dd>
+      <dt>Customer</dt><dd>{{ record.customer_name }}</dd>
+      <dt>Provider</dt><dd>{{ record.business_name }}</dd>
+      <dt>Estimated cost</dt><dd>₹{{ '%.2f'|format(record.estimated_cost) }}</dd>
+      <dt>Final cost</dt><dd>{{ '₹%.2f'|format(record.final_cost) if record.final_cost is not none else '—' }}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h3>Confirmations</h3>
+    {% if confirmations %}
+    <table><tbody>
+    {% for c in confirmations %}<tr><td>{{ c.role }}</td><td>{{ c.confirmation_type }}</td><td>{{ c.confirmed_at }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<p class="empty-state">None recorded.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h3>Condition Reports</h3>
+  <table><thead><tr><th>Stage</th><th>Item</th><th>Severity</th><th>Notes</th></tr></thead><tbody>
+  {% for c in conditions %}<tr><td>{{ c.stage }}</td><td>{{ c.condition_type }}</td><td>{{ status_badge(c.severity) }}</td><td>{{ c.description or '—' }}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+
+<div class="card">
+  <h3>Photographic Evidence</h3>
+  <div class="photo-grid">
+  {% for e in evidence %}
+    <figure><img src="{{ url_for('static', filename=e.file_reference) }}"><figcaption>{{ e.stage }} &middot; {{ e.angle }}</figcaption></figure>
+  {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Service Updates</h3>
+    {% for u in service_updates %}<div class="hint">{{ u.update_type }}: {{ u.description }} ({{ u.created_by_name }})</div>{% endfor %}
+  </div>
+  <div class="card">
+    <h3>Payments</h3>
+    {% for p in payments %}<div class="hint">₹{{ '%.2f'|format(p.amount) }} via {{ p.method }} &middot; {{ p.created_at[:10] }}</div>{% endfor %}
+  </div>
+</div>
+
+{% if return_row %}
+<div class="card">
+  <h3>Return</h3>
+  <dl class="kv">
+    <dt>Return code</dt><dd>{{ return_row.return_code or '—' }}</dd>
+    <dt>Customer confirmed</dt><dd>{{ return_row.returned_at or '—' }}</dd>
+    <dt>Provider verified</dt><dd>{{ return_row.verified_at or '—' }}</dd>
+    <dt>Condition summary</dt><dd>{{ return_row.condition_summary or '—' }}</dd>
+  </dl>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Audit History</h3>
+  <table><thead><tr><th>Action</th><th>User</th><th>Timestamp</th></tr></thead><tbody>
+  {% for a in audit_logs %}<tr><td>{{ a.action.replace('_',' ') }}</td><td>{{ a.user_name or 'System' }}</td><td>{{ a.created_at }}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+
+{% if dispute.status != 'CLOSED' %}
+<div class="card">
+  <h2>Resolve Dispute</h2>
+  <form class="form form-wide" method="post" action="{{ url_for('admin.resolve_dispute', dispute_id=dispute.id) }}">
+    <div class="field"><label>Resolution notes</label><textarea name="resolution" required></textarea></div>
+    <button class="btn" type="submit">Close Dispute</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

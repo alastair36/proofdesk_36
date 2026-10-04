@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Before &amp; After - {{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Before &amp; After Comparison</h1>
+  <div class="subtitle">{{ record.record_number }} &middot; {{ record.item_name }}</div>
+</div>
+<p class="hint">This page presents the recorded evidence from each stage side by side. It does not
+   automatically claim the item is damaged, missing parts, or unchanged — that judgment is left to you.</p>
+
+<div class="compare">
+  <div class="card">
+    <h2>AT HANDOVER</h2>
+    <h3>Condition</h3>
+    {% if cond_h %}
+      <table><tbody>
+      {% for c in cond_h %}<tr><td>{{ c.condition_type }}</td><td>{{ status_badge(c.severity) }}</td><td>{{ c.description or '' }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% else %}<p class="empty-state">Not recorded.</p>{% endif %}
+    <h3>Accessories received</h3>
+    <ul class="checklist">{% for a in accessories %}<li>{{ a.name }}: {{ 'YES' if a.received else 'NO' }}</li>{% endfor %}</ul>
+    <h3>Photos</h3>
+    {% if ev_h %}
+    <div class="photo-grid">{% for e in ev_h %}<figure><img src="{{ url_for('static', filename=e.file_reference) }}"><figcaption>{{ e.angle }}</figcaption></figure>{% endfor %}</div>
+    {% else %}<p class="empty-state">None.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>AT RETURN</h2>
+    <h3>Condition</h3>
+    {% if cond_r %}
+      <table><tbody>
+      {% for c in cond_r %}<tr><td>{{ c.condition_type }}</td><td>{{ status_badge(c.severity) }}</td><td>{{ c.description or '' }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% else %}<p class="empty-state">Not recorded yet.</p>{% endif %}
+    <h3>Accessories returned</h3>
+    <ul class="checklist">{% for a in accessories %}<li>{{ a.name }}: {{ 'YES' if a.returned == 1 else ('NO' if a.returned == 0 else 'Not recorded') }}</li>{% endfor %}</ul>
+    <h3>Photos</h3>
+    {% if ev_r %}
+    <div class="photo-grid">{% for e in ev_r %}<figure><img src="{{ url_for('static', filename=e.file_reference) }}"><figcaption>{{ e.angle }}</figcaption></figure>{% endfor %}</div>
+    {% else %}<p class="empty-state">None.</p>{% endif %}
+  </div>
+</div>
+
+<div style="margin-top:14px">
+  <a href="{{ url_for('records.view_record', record_number=record.record_number) }}">&larr; Back to service record</a>
+</div>
+{% endblock %}

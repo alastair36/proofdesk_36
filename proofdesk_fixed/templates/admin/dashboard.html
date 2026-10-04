@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bar_row %}
+{% block title %}Admin Dashboard - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Admin Dashboard</h1>
+  <div class="subtitle">Platform overview</div>
+</div>
+
+<div class="grid grid-4">
+  <a class="card stat" href="{{ url_for('admin.users_list') }}"><div class="num">{{ stats.total_users }}</div><div class="label">Total users</div></a>
+  <a class="card stat" href="{{ url_for('admin.providers_list') }}"><div class="num">{{ stats.total_providers }}</div><div class="label">Total service providers</div></a>
+  <a class="card stat" href="{{ url_for('admin.services_list') }}"><div class="num">{{ stats.active_records }}</div><div class="label">Active service records</div></a>
+  <div class="card stat"><div class="num">{{ stats.completed_services }}</div><div class="label">Completed services</div></div>
+</div>
+<div class="grid grid-4">
+  <div class="card stat"><div class="num">{{ stats.pending_handovers }}</div><div class="label">Pending handovers</div></div>
+  <div class="card stat"><div class="num">{{ stats.pending_returns }}</div><div class="label">Pending returns</div></div>
+  <a class="card stat" href="{{ url_for('admin.disputes_list') }}"><div class="num">{{ stats.open_disputes }}</div><div class="label">Open disputes</div></a>
+  <div class="card stat"><div class="num">{{ stats.closed_disputes }}</div><div class="label">Completed disputes</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Services by Category</h2>
+    {% if by_category %}
+      {% set max_c = by_category[0].c %}
+      {% for row in by_category %}
+      {{ bar_row(row.category, row.c, max_c, '#6c5cff', '#4b3fe4') }}
+      {% endfor %}
+    {% else %}<p class="empty-state">No data yet.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Records by Status</h2>
+    {% if by_status %}
+      {% set max_s = by_status|map(attribute='c')|max %}
+      {% for row in by_status %}
+      {{ bar_row(row.status.replace('_',' '), row.c, max_s, '#5aa2f5', '#2b7fe0') }}
+      {% endfor %}
+    {% else %}<p class="empty-state">No data yet.</p>{% endif %}
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Disputes by Category</h2>
+    {% if disputes_by_category %}
+      {% set max_d = disputes_by_category[0].c %}
+      {% for row in disputes_by_category %}
+      {{ bar_row(row.category.replace('_',' '), row.c, max_d, '#f0728b', '#d93a5b') }}
+      {% endfor %}
+    {% else %}<p class="empty-state">No disputes yet.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Monthly Service Records</h2>
+    {% if monthly %}
+      {% set max_m = monthly|map(attribute='c')|max %}
+      {% for row in monthly %}
+      {{ bar_row(row.ym, row.c, max_m, '#f5b84a', '#d98a0b') }}
+      {% endfor %}
+    {% else %}<p class="empty-state">No data yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

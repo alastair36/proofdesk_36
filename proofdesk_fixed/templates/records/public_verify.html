@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Verify {{ record.record_number }} - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-wrap">
+<div class="auth-wrap">
+  <div class="card cert">
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+    <div class="brand-lg">PROOFDESK &middot; VERIFIED RECORD</div>
+    <h1 class="mono" data-copy="{{ record.record_number }}" title="Click to copy">{{ record.record_number }}</h1>
+    <div class="rows">
+      <div><span>Status</span>{{ status_badge(record.status) }}</div>
+      <div><span>Verified</span><b>{{ record.created_at }}</b></div>
+    </div>
+    <p class="hint" style="margin-top:16px">This is a public verification page. No personal customer information is shown here.</p>
+  </div>
+</div>
+</div>
+{% endblock %}

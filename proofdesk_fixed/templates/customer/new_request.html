@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Create Service Request - ProofDesk{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Create Service Request</h1>
+  <div class="subtitle">Tell a provider about the item you need serviced</div>
+</div>
+<div class="card">
+<form class="form form-wide" method="post">
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="provider_id">Service provider</label>
+      <select id="provider_id" name="provider_id" required>
+        <option value="">Select a verified provider&hellip;</option>
+        {% for p in providers %}
+          <option value="{{ p.id }}" {% if form.get('provider_id')|string == p.id|string %}selected{% endif %}>
+            {{ p.business_name }} &middot; {{ p.category }}
+          </option>
+        {% endfor %}
+      </select>
+      {% if not providers %}<div class="hint">No verified providers are available yet.</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="category">Service category</label>
+      <select id="category" name="category" required>
+        <option value="">Select&hellip;</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {% if form.get('category')==c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="item_name">Item name</label>
+      <input type="text" id="item_name" name="item_name" value="{{ form.get('item_name','') }}" required>
+    </div>
+    <div class="field">
+      <label for="brand">Brand</label>
+      <input type="text" id="brand" name="brand" value="{{ form.get('brand','') }}">
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="model">Model</label>
+      <input type="text" id="model" name="model" value="{{ form.get('model','') }}">
+    </div>
+    <div class="field">
+      <label for="serial_number">Serial number</label>
+      <input type="text" id="serial_number" name="serial_number" value="{{ form.get('serial_number','') }}">
+    </div>
+  </div>
+  <div class="field">
+    <label for="problem_description">Problem description</label>
+    <textarea id="problem_description" name="problem_description" required>{{ form.get('problem_description','') }}</textarea>
+  </div>
+  <div class="field">
+    <label for="preferred_service">Preferred service</label>
+    <input type="text" id="preferred_service" name="preferred_service" value="{{ form.get('preferred_service','') }}"
+           placeholder="e.g. Diagnose and repair charging issue">
+  </div>
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="expected_completion_date">Expected completion date</label>
+      <input type="date" id="expected_completion_date" name="expected_completion_date"
+             value="{{ form.get('expected_completion_date','') }}">
+    </div>
+  </div>
+  <div class="field">
+    <label for="additional_notes">Additional notes</label>
+    <textarea id="additional_notes" name="additional_notes">{{ form.get('additional_notes','') }}</textarea>
+  </div>
+  <button class="btn" type="submit">Submit Request</button>
+</form>
+</div>
+{% endblock %}

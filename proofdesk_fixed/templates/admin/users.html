@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Users - ProofDesk Admin{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Users</h1></div>
+<form class="form" method="get" style="max-width:320px;margin-bottom:16px">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search name or email">
+</form>
+<div class="card">
+<table>
+  <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+  <tbody>
+  {% for u in users %}
+    <tr>
+      <td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td>
+      <td><span class="badge {{ 'badge-green' if u.status=='active' else 'badge-red' }}">{{ u.status }}</span></td>
+      <td>{{ u.created_at[:10] }}</td>
+      <td>
+        {% if u.status == 'active' %}
+        <form method="post" action="{{ url_for('admin.suspend_user', user_id=u.id) }}" style="display:inline">
+          <button class="btn btn-sm btn-danger" type="submit">Suspend</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('admin.reactivate_user', user_id=u.id) }}" style="display:inline">
+          <button class="btn btn-sm btn-outline" type="submit">Reactivate</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="empty-state">No users found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
